@@ -12,7 +12,6 @@ export class CashMachineController {
   async balance(@Res() response, @Body() balanceDto: BalanceDto) {
     try {
       const balance = await this.cashMachineService.balance(balanceDto);
-      console.log(balance);
       return response.status(HttpStatus.OK).json({
         message: 'Saldo em conta',
         balance,

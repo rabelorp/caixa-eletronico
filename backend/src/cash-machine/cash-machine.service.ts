@@ -128,7 +128,6 @@ export class CashMachineService {
   //   depositCashMachineDto: DepositCashMachineDto,
   // ): Promise<IDepositCashMachine> {
   //   const newDeposit = await new this.notesModel(depositCashMachineDto);
-  //   console.log(newDeposit);
   //   return newDeposit.save();
   // }
 }
