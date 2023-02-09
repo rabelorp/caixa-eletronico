@@ -1,16 +1,40 @@
-import { Injectable } from '@nestjs/common';
-import { WithdrawDto } from './dto/withdraw.dto';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { WithdrawDto } from './dto/widthdraw.dto';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { ICashMachine } from './interface/cash-machine.interface';
+import { DepositDto } from './dto/deposit.dto';
+import { BalanceDto } from './dto/balance.dto';
+// import { DepositCashMachineDto } from './dto/deposit-cashmachine.dto';
+import { IDepositCashMachine } from './interface/deposit-cashmachine.interface';
 
 @Injectable()
 export class CashMachineService {
-  balance(id: string): number {
-    id;
-    return 100;
+  constructor(
+    @InjectModel('Balance') private balanceModel: Model<ICashMachine>,
+    @InjectModel('Note') private notesModel: Model<IDepositCashMachine>,
+  ) {}
+
+  async balance(balanceDto: BalanceDto) {
+    const { userId } = balanceDto;
+    const balance = await this.balanceModel.find({ userId: userId });
+    const sum = balance.reduce(function (accumulator, object) {
+      return accumulator + object.amount;
+    }, 0);
+
+    return sum;
   }
 
-  searchNotes(amount, notesAvailableArray, minNominal, availableAmount) {
+  private searchNotes(
+    amount,
+    notesAvailableArray,
+    minNominal,
+    availableAmount,
+  ) {
     if (notesAvailableArray.length === 0) {
-      return `O valor mínimo para saque é: ${minNominal} e a quantia máxima é: ${availableAmount}`;
+      throw new NotFoundException(
+        `O valor mínimo para saque é: ${minNominal} e a quantia máxima é: ${availableAmount}`,
+      );
     }
 
     const result = {};
@@ -46,8 +70,13 @@ export class CashMachineService {
 
     return result;
   }
-  private notesAvailable(amount): any {
+  private async notesAvailable(amount): Promise<ICashMachine[]> {
     const notesAvailable = { 100: 1, 50: 2, 20: 1, 10: 1 };
+    // const notesAvailable = await this.notesModel.find();
+    // if (!notesAvailable) {
+    //   throw new NotFoundException('Não há notas disponivéis neste caixa!');
+    // }
+    // return notesAvailable;
 
     // Converte objeto para array ordenado
     const notesAvailableArray = Object.entries(notesAvailable)
@@ -66,7 +95,9 @@ export class CashMachineService {
 
     // Verifique o valor do pedido na emissão disponível
     if (amount > availableAmount) {
-      return `Não há dinheiro suficiente no caixa eletrônico. O valor máximo é: ${availableAmount}`;
+      throw new NotFoundException(
+        `Não há dinheiro suficiente no caixa eletrônico. O valor máximo é: R$ ${availableAmount}`,
+      );
     }
 
     return this.searchNotes(
@@ -77,12 +108,27 @@ export class CashMachineService {
     );
   }
 
-  withdraw(withdrawDto: WithdrawDto) {
-    const { id, amount } = withdrawDto;
-    const balance = this.balance(id);
+  async withdraw(withdrawDto: WithdrawDto) {
+    const { amount } = withdrawDto;
+    const balance = await this.balance(withdrawDto);
+
     if (amount > balance) {
-      return 'você não tem limite';
+      throw new NotFoundException('Você não tem limite');
     }
+
     return this.notesAvailable(amount);
   }
+
+  async depositForUser(depositDto: DepositDto): Promise<ICashMachine> {
+    const newDeposit = await new this.balanceModel(depositDto);
+    return newDeposit.save();
+  }
+
+  // async depositForCashMachine(
+  //   depositCashMachineDto: DepositCashMachineDto,
+  // ): Promise<IDepositCashMachine> {
+  //   const newDeposit = await new this.notesModel(depositCashMachineDto);
+  //   console.log(newDeposit);
+  //   return newDeposit.save();
+  // }
 }
