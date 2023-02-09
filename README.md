@@ -35,8 +35,48 @@ implementar conforme julgar mais adequado;
 
 ### Itens a serem avaliados:
 - Cobertura dos testes unitários;
-- Organização das resposabilidades;
+- Organização das responsabilidade;
 - Estrutura do Código;
 - Código Limpo.
 
 
+## Instalação
+
+```bash
+# dentro da pasta backend e depois frontend
+$ npm install
+```
+
+## Subir aplicação
+
+```bash
+# dentro da pasta backend
+$ docker-compose up -d
+ 
+# development
+$ npm run start
+
+# watch mode
+$ npm run start:dev
+
+# production mode
+$ npm run start:prod
+```
+
+```bash
+# dentro da pasta frontend
+npm run dev 
+```
+
+## Testes
+
+```bash
+# unit tests
+$ npm run test
+
+# e2e tests
+$ npm run test:e2e
+
+# test coverage
+$ npm run test:cov
+```
